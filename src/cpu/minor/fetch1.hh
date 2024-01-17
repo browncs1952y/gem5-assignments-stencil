@@ -225,6 +225,9 @@ class Fetch1 : public Named
     unsigned int fetchLimit;
 
   protected:
+    bool paranoid;
+    // TODO: Your code here!
+
     /** Cycle-by-cycle state */
 
     /** State of memory access for head instruction fetch */

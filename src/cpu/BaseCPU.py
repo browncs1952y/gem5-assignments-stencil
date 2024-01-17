@@ -98,6 +98,7 @@ class BaseCPU(ClockedObject):
         self._ccObject.takeOverFrom(old_cpu._ccObject)
 
     system = Param.System(Parent.any, "system object")
+    paranoid = Param.Bool(False, "flag to turn on paranoid processor")
     cpu_id = Param.Int(-1, "CPU identifier")
     socket_id = Param.Unsigned(0, "Physical Socket identifier")
     numThreads = Param.Unsigned(1, "number of HW thread contexts")

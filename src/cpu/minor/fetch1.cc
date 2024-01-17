@@ -65,6 +65,7 @@ Fetch1::Fetch1(const std::string &name_,
     Latch<BranchData>::Output prediction_,
     std::vector<InputBuffer<ForwardLineData>> &next_stage_input_buffer) :
     Named(name_),
+    paranoid(params.paranoid),
     cpu(cpu_),
     inp(inp_),
     out(out_),

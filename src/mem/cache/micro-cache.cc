@@ -33,18 +33,18 @@
 namespace gem5 {
 
 MicroCache::MicroCache(const MicroCacheParams *p) :
-	SimObject(*p),
-	cpu_side_port(p->name + ".cpu_side_port", this),
-	mem_side_port(p->name + ".mem_side_port", this),
-	memSendEvent([this] { sendToMem(); }, name()),
-	cpuSendEvent([this] { sendToCpu(); }, name()),
-	writebackEvent([this] { writebackToMem(); }, name()),
-	// TODO: YOUR ADDITIONAL FIELDS HERE!
-	blocked(false),
+    SimObject(*p),
+    cpu_side_port(p->name + ".cpu_side_port", this),
+    mem_side_port(p->name + ".mem_side_port", this),
+    memSendEvent([this] { sendToMem(); }, name()),
+    cpuSendEvent([this] { sendToCpu(); }, name()),
+    writebackEvent([this] { writebackToMem(); }, name()),
+    // TODO: YOUR ADDITIONAL FIELDS HERE!
+    blocked(false),
     to_mem(nullptr),
     to_cpu(nullptr),
-	to_writeback(nullptr),
-	latency(p->latency * 1000)
+    to_writeback(nullptr),
+    latency(p->latency * 1000)
 {
 };
 
@@ -52,76 +52,76 @@ MicroCache::MicroCache(const MicroCacheParams *p) :
 Port&
 MicroCache::getPort(const std::string &if_name, PortID idx)
 {
-	if (if_name == "cpu_side") {
-		return cpu_side_port;
-	} else if (if_name == "mem_side") {
-		return mem_side_port;
-	}
+    if (if_name == "cpu_side") {
+        return cpu_side_port;
+    } else if (if_name == "mem_side") {
+        return mem_side_port;
+    }
 
-	return SimObject::getPort(if_name, idx);
+    return SimObject::getPort(if_name, idx);
 }
 
 
 bool
 MicroCache::handleRequest(PacketPtr pkt)
 {
-	if (blocked) {
+    if (blocked) {
         return false;
     }
 
-	blocked = true;
+    blocked = true;
 
-	// TODO: Your implementation here!
+    // TODO: Your implementation here!
     if (false) {
         // hit case!
 
-		// TODO!
+        // TODO!
 
 
-		if (pkt->needsResponse()) {
-			pkt->makeTimingResponse();
-			to_cpu = pkt;
+        if (pkt->needsResponse()) {
+            pkt->makeTimingResponse();
+            to_cpu = pkt;
 
-			schedule(cpuSendEvent, curTick() + latency);
-		}
+            schedule(cpuSendEvent, curTick() + latency);
+        }
     } else {
-		// miss case!
-		pending = pkt;
+        // miss case!
+        pending = pkt;
 
-		// TODO!
+        // TODO!
     }
 
-	return true;
+    return true;
 }
 
 
 void
 MicroCache::handleResponse(PacketPtr pkt)
 {
-	assert(blocked);
+    assert(blocked);
 
-	if (false /* some check if we need to writeback data */)
-		writebackData(false /* dirty? */, 0 /* tags info */, nullptr /* data */);
+    if (false /* some check if we need to writeback data */)
+        writebackData(false /* dirty? */, 0 /* tags info */, nullptr /* data */);
 
-	// this packet was dynamically created by us
-	delete pkt;
+    // this packet was dynamically created by us
+    delete pkt;
 
-	// TODO!
+    // TODO!
 
-	if (pending->needsResponse()) {
-		pending->makeTimingResponse();
-		to_cpu = pending;
+    if (pending->needsResponse()) {
+        pending->makeTimingResponse();
+        to_cpu = pending;
 
-		schedule(cpuSendEvent, curTick() + latency);
-	}
+        schedule(cpuSendEvent, curTick() + latency);
+    }
 
-	pending = nullptr;
+    pending = nullptr;
 }
 
 gem5::MicroCache*
 MicroCacheParams::create() const
 {
-	return new gem5::MicroCache(this);
+    return new gem5::MicroCache(this);
 }
 
 }

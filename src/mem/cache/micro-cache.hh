@@ -44,147 +44,147 @@ struct MicroCacheParams;
 
 class MicroCache : public SimObject {
   private:
-	class CpuSidePort : public ResponsePort {
-	  private:
-		MicroCache *owner;
+    class CpuSidePort : public ResponsePort {
+      private:
+        MicroCache *owner;
 
-	  public:
-		bool needRetry;
+      public:
+        bool needRetry;
 
-		CpuSidePort(const std::string &name, MicroCache *owner) :
-		    ResponsePort(name), owner(owner), needRetry(false)
-		{  };
+        CpuSidePort(const std::string &name, MicroCache *owner) :
+            ResponsePort(name), owner(owner), needRetry(false)
+        {  };
 
-	  protected:
-	bool recvTimingReq(PacketPtr pkt) override {
+      protected:
+    bool recvTimingReq(PacketPtr pkt) override {
             bool ret = owner->handleRequest(pkt);
             if (!ret) needRetry = true;
             return ret;
         };
 
-		// un-used for assignment, do not modify!
-		Tick recvAtomic(PacketPtr pkt) override {
-			return owner->mem_side_port.sendAtomic(pkt);
-		}
+        // un-used for assignment, do not modify!
+        Tick recvAtomic(PacketPtr pkt) override {
+            return owner->mem_side_port.sendAtomic(pkt);
+        }
 
-		void recvRespRetry() override {  };
+        void recvRespRetry() override {  };
 
-		void recvFunctional(PacketPtr pkt) override {
-			owner->mem_side_port.sendFunctional(pkt);
-		};
+        void recvFunctional(PacketPtr pkt) override {
+            owner->mem_side_port.sendFunctional(pkt);
+        };
 
-		AddrRangeList getAddrRanges() const override {
-			return owner->mem_side_port.getAddrRanges();
-		};
+        AddrRangeList getAddrRanges() const override {
+            return owner->mem_side_port.getAddrRanges();
+        };
 
-	};
+    };
 
-	class MemSidePort : public RequestPort {
-	  private:
-		MicroCache *owner;
+    class MemSidePort : public RequestPort {
+      private:
+        MicroCache *owner;
 
-	  public:
-		PacketPtr blocked_pkt;
+      public:
+        PacketPtr blocked_pkt;
 
-		MemSidePort(const std::string &name, MicroCache *owner) :
-		    RequestPort(name), owner(owner), blocked_pkt(nullptr)
-		{  };
+        MemSidePort(const std::string &name, MicroCache *owner) :
+            RequestPort(name), owner(owner), blocked_pkt(nullptr)
+        {  };
 
-	  protected:
-		bool recvTimingResp(PacketPtr pkt) override {
-			owner->handleResponse(pkt);
-			return true;
-		};
+      protected:
+        bool recvTimingResp(PacketPtr pkt) override {
+            owner->handleResponse(pkt);
+            return true;
+        };
 
-		void recvReqRetry() override {
-			if (blocked_pkt && sendTimingReq(blocked_pkt)) {
-				blocked_pkt = nullptr;
-			}
-		};
+        void recvReqRetry() override {
+            if (blocked_pkt && sendTimingReq(blocked_pkt)) {
+                blocked_pkt = nullptr;
+            }
+        };
 
-		void recvRangeChange() override {
-			owner->cpu_side_port.sendRangeChange();
-		}
+        void recvRangeChange() override {
+            owner->cpu_side_port.sendRangeChange();
+        }
 
-		void recvTimingSnoopReq(PacketPtr pkt) override {
-			return;
-		}
-	};
+        void recvTimingSnoopReq(PacketPtr pkt) override {
+            return;
+        }
+    };
 
   public:
-	CpuSidePort cpu_side_port;
-	MemSidePort mem_side_port;
+    CpuSidePort cpu_side_port;
+    MemSidePort mem_side_port;
 
-	EventFunctionWrapper memSendEvent;
-	EventFunctionWrapper cpuSendEvent;
-	EventFunctionWrapper writebackEvent;
+    EventFunctionWrapper memSendEvent;
+    EventFunctionWrapper cpuSendEvent;
+    EventFunctionWrapper writebackEvent;
 
-	bool blocked;
+    bool blocked;
     PacketPtr pending;
 
-	PacketPtr to_mem;
-	PacketPtr to_cpu;
-	PacketPtr to_writeback;
+    PacketPtr to_mem;
+    PacketPtr to_cpu;
+    PacketPtr to_writeback;
 
-	uint64_t latency;
+    uint64_t latency;
 
-	// TODO: Your Implementation (Class Variables) Here!
+    // TODO: Your Implementation (Class Variables) Here!
 
 
-	///////////////////////////////////////////////////////
-	// -------------FUNCTION-DECLARATIONS--------------- //
-	///////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////
+    // -------------FUNCTION-DECLARATIONS--------------- //
+    ///////////////////////////////////////////////////////
 
-	MicroCache(const MicroCacheParams *p);
+    MicroCache(const MicroCacheParams *p);
     Port &getPort(const std::string &if_name, PortID idx);
 
-	bool handleRequest(PacketPtr pkt);
-	void handleResponse(PacketPtr pkt);
+    bool handleRequest(PacketPtr pkt);
+    void handleResponse(PacketPtr pkt);
 
-	void writebackData(bool dirty, uint64_t addr, uint8_t *data) {
-		assert(to_writeback == nullptr);
+    void writebackData(bool dirty, uint64_t addr, uint8_t *data) {
+        assert(to_writeback == nullptr);
 
-		RequestPtr req = std::make_shared<Request>(addr, 64, 0, 0);
+        RequestPtr req = std::make_shared<Request>(addr, 64, 0, 0);
 
-		if (dirty) {
-			to_writeback = new Packet(req, MemCmd::WritebackDirty, 64);
-			to_writeback->allocate();
-			if (to_writeback->getPtr<uint8_t>() != data) {
-				to_writeback->setData(data);
-			}
-		} else
-			to_writeback = new Packet(req, MemCmd::WritebackClean, 64);
+        if (dirty) {
+            to_writeback = new Packet(req, MemCmd::WritebackDirty, 64);
+            to_writeback->allocate();
+            if (to_writeback->getPtr<uint8_t>() != data) {
+                to_writeback->dataDynamic(data);
+            }
+        } else
+            to_writeback = new Packet(req, MemCmd::WritebackClean, 64);
 
-		schedule(writebackEvent, curTick());
-	};
+        schedule(writebackEvent, curTick());
+    };
 
-	void sendToMem() {
-		mem_side_port.sendTimingReq(to_mem);
-		to_mem = nullptr;
-	}
+    void sendToMem() {
+        mem_side_port.sendTimingReq(to_mem);
+        to_mem = nullptr;
+    }
 
     void sendToCpu() {
         if (to_cpu->req->isCondSwap() || to_cpu->isLLSC()) to_cpu->req->setExtraData(0);
 
-		assert(cpu_side_port.sendTimingResp(to_cpu));
-		to_cpu = nullptr;
+        assert(cpu_side_port.sendTimingResp(to_cpu));
+        to_cpu = nullptr;
 
-		assert(blocked);
-		blocked = false;
+        assert(blocked);
+        blocked = false;
 
-		if (cpu_side_port.needRetry)
-			cpu_side_port.sendRetryReq();
+        if (cpu_side_port.needRetry)
+            cpu_side_port.sendRetryReq();
 
-		cpu_side_port.needRetry = false;
-	}
+        cpu_side_port.needRetry = false;
+    }
 
-	void writebackToMem() {
-		mem_side_port.sendTimingReq(to_writeback);
-		to_writeback = nullptr;
-	}
+    void writebackToMem() {
+        mem_side_port.sendTimingReq(to_writeback);
+        to_writeback = nullptr;
+    }
 
 
-	// TODO: Your Implementation (Helper Functions) Here!
+    // TODO: Your Implementation (Helper Functions) Here!
 };
 
 

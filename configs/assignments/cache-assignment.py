@@ -84,7 +84,7 @@ system.cpu = RiscvTimingSimpleCPU()
 
 # Create an L1 instruction and data cache
 system.cpu.icache = L1ICache()
-system.cpu.dcache = MicroDCache()
+system.cpu.dcache = L1DCache()
 
 # Connect the instruction and data caches to the CPU
 system.cpu.icache.connectCPU(system.cpu)
@@ -98,7 +98,7 @@ system.cpu.icache.connectBus(system.l2bus)
 system.cpu.dcache.connectBus(system.l2bus)
 
 # Create an L2 cache and connect it to the l2bus
-system.l2cache = L2Cache()
+system.l2cache = MicroL2Cache()
 system.l2cache.connectCPUSideBus(system.l2bus)
 
 # Create a memory bus

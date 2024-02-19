@@ -57,9 +57,11 @@ from common import SimpleOpts
 thispath = os.path.dirname(os.path.realpath(__file__))
 default_binary = os.path.join(
     thispath,
-    "../../",
+    "../../../",
     "tests/test-progs/cache-tests/prog1",
 )
+
+print(default_binary)
 
 # Binary to execute
 SimpleOpts.add_option("binary", nargs="?", default=default_binary)
@@ -98,7 +100,7 @@ system.cpu.icache.connectBus(system.l2bus)
 system.cpu.dcache.connectBus(system.l2bus)
 
 # Create an L2 cache and connect it to the l2bus
-system.l2cache = MicroL2Cache()
+system.l2cache = L2Cache()
 system.l2cache.connectCPUSideBus(system.l2bus)
 
 # Create a memory bus

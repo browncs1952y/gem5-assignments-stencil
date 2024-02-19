@@ -121,7 +121,17 @@ class MicroCache : public SimObject {
     EventFunctionWrapper writebackEvent;
 
     bool blocked;
+
+    struct Block
+    {
+        uint8_t data[64];
+        Addr tags;
+        bool dirty;
+        bool valid;
+    };
+
     PacketPtr pending;
+    Block *blks;
 
     PacketPtr to_mem;
     PacketPtr to_cpu;

@@ -61,6 +61,8 @@ default_binary = os.path.join(
     "tests/test-progs/cache-tests/prog1",
 )
 
+print(default_binary)
+
 # Binary to execute
 SimpleOpts.add_option("binary", nargs="?", default=default_binary)
 

@@ -44,7 +44,8 @@ MicroCache::MicroCache(const MicroCacheParams *p) :
     to_mem(nullptr),
     to_cpu(nullptr),
     to_writeback(nullptr),
-    latency(p->latency * 1000)
+    latency(p->latency * 1000),
+    stats(this)
 {
 };
 
@@ -74,6 +75,7 @@ MicroCache::handleRequest(PacketPtr pkt)
     // TODO: Your implementation here!
     if (false) {
         // hit case!
+        stats.hits++;
 
         // TODO!
 
@@ -86,6 +88,8 @@ MicroCache::handleRequest(PacketPtr pkt)
         }
     } else {
         // miss case!
+        stats.misses++;
+
         pending = pkt;
 
         // TODO!
@@ -116,6 +120,15 @@ MicroCache::handleResponse(PacketPtr pkt)
     }
 
     pending = nullptr;
+}
+
+MicroCache::MicroCacheStats::MicroCacheStats(statistics::Group *parent)
+  : statistics::Group(parent),
+    ADD_STAT(hits, statistics::units::Count::get(), "Number of hits"),
+    ADD_STAT(misses, statistics::units::Count::get(), "Number of misses"),
+    ADD_STAT(hitRate, statistics::units::Ratio::get(), "Number of hits/ (hits + misses)", hits / (hits + misses))
+
+{
 }
 
 gem5::MicroCache*

@@ -35,6 +35,7 @@
 #ifndef __MICRO_CACHE_HH__
 #define __MICRO_CACHE_HH__
 
+#include "base/statistics.hh"
 #include "mem/port.hh"
 #include "sim/sim_object.hh"
 
@@ -127,6 +128,19 @@ class MicroCache : public SimObject {
     PacketPtr to_writeback;
 
     uint64_t latency;
+
+  protected:
+    struct MicroCacheStats : public statistics::Group
+    {
+        MicroCacheStats(statistics::Group *parent);
+        statistics::Scalar hits;
+        statistics::Scalar misses;
+	statistics::Formula hitRate;
+    } stats;
+
+
+
+  public:
 
     // TODO: Your Implementation (Class Variables) Here!
 

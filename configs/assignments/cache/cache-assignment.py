@@ -103,7 +103,7 @@ system.cpu.icache.connectBus(system.l2bus)
 system.cpu.dcache.connectBus(system.l2bus)
 
 # Create an L2 cache and connect it to the l2bus
-system.l2cache = MicroL2Cache()
+system.l2cache = MicroL2Cache(args)
 system.l2cache.connectCPUSideBus(system.l2bus)
 
 # Create a memory bus

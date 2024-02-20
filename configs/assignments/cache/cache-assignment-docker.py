@@ -63,6 +63,9 @@ default_binary = os.path.join(
 
 print(default_binary)
 
+maxtick=10000000000000
+SimpleOpts.add_option("--maxtick", default=maxtick, type=int)
+
 # Binary to execute
 SimpleOpts.add_option("binary", nargs="?", default=default_binary)
 
@@ -139,6 +142,9 @@ system.cpu.createThreads()
 root = Root(full_system=False, system=system)
 # instantiate all of the objects we've created above
 m5.instantiate()
+
+if args.maxtick != 10000000000000:
+    m5.setMaxTick(args.maxtick)
 
 print(f"Beginning simulation!")
 exit_event = m5.simulate()

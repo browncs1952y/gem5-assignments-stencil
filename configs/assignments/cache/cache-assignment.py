@@ -61,6 +61,9 @@ default_binary = os.path.join(
     "tests/test-progs/cache-tests/prog1",
 )
 
+maxtick=10000000000000
+SimpleOpts.add_option("--maxtick", default=maxtick, type=int)
+
 print(default_binary)
 
 # Binary to execute
@@ -139,6 +142,9 @@ system.cpu.createThreads()
 root = Root(full_system=False, system=system)
 # instantiate all of the objects we've created above
 m5.instantiate()
+
+if args.maxtick != 10000000000000:
+    m5.setMaxTick(args.maxtick)
 
 print(f"Beginning simulation!")
 exit_event = m5.simulate()

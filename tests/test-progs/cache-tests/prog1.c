@@ -3,9 +3,9 @@
 int
 main(int argc, char **argv)
 {
-    char arr[1 << 20];
+    char arr[512 << 10];
 
     for (int i = 0; i < 65536; i++) {
-        arr[rand() % (1 << 20)]++;
+        arr[rand() % (512 << 10)]++;
     }
 }

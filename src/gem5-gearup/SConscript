@@ -1,0 +1,10 @@
+
+
+Import('*')
+
+SimObject("ExampleDevices.py", sim_objects=[
+    "ForwardingObject", "BuggyObject1", "BuggyObject2"])
+
+Source('forwarding_object.cc')
+Source('buggy_object1.cc')
+Source('buggy_object2.cc')

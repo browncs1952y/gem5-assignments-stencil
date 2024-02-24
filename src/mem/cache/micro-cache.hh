@@ -183,8 +183,11 @@ class MicroCache : public SimObject {
     };
 
     void sendToMem() {
-        mem_side_port.sendTimingReq(to_mem);
-        to_mem = nullptr;
+        if (!mem_side_port.sendTimingReq(to_mem)) {
+            mem_side_port.blocked_pkt = to_mem;
+        } else {
+            to_mem = nullptr;
+        }
     }
 
     void sendToCpu() {
@@ -205,6 +208,11 @@ class MicroCache : public SimObject {
     void writebackToMem() {
         mem_side_port.sendTimingReq(to_writeback);
         to_writeback = nullptr;
+
+        if (cpu_side_port.needRetry)
+            cpu_side_port.sendRetryReq();
+
+        cpu_side_port.needRetry = false;
     }
 
 

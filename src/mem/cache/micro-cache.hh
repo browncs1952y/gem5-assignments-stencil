@@ -174,7 +174,7 @@ class MicroCache : public SimObject {
             to_writeback = new Packet(req, MemCmd::WritebackDirty, 64);
             to_writeback->allocate();
             if (to_writeback->getPtr<uint8_t>() != data) {
-                to_writeback->dataDynamic(data);
+                to_writeback->setData(data);
             }
         } else
             to_writeback = new Packet(req, MemCmd::WritebackClean, 64);

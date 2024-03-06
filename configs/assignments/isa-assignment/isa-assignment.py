@@ -32,6 +32,12 @@ X86 ISA). More detailed documentation can be found in `simple.py`.
 import m5
 from m5.objects import *
 
+m5.util.addToPath("../../")
+from common import SimpleOpts
+
+SimpleOpts.add_option("--argv", default="", type=str)
+args = SimpleOpts.parse_args()
+
 system = System()
 
 system.clk_domain = SrcClockDomain()
@@ -40,7 +46,7 @@ system.clk_domain.voltage_domain = VoltageDomain()
 
 system.mem_mode = "timing"
 system.mem_ranges = [AddrRange("512MB")]
-system.cpu = RiscvO3CPU()
+system.cpu = RISCVO3CPU()
 
 system.membus = SystemXBar()
 
@@ -59,14 +65,16 @@ system.system_port = system.membus.cpu_side_ports
 thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(
     thispath,
-    "../../",
-    "tests/test-progs/zero-mult/zero-mult",
+    "../../../",
+    "tests/test-progs/isa-assignment/leaky-prog",
 )
 
 system.workload = SEWorkload.init_compatible(binary)
 
+print(args.argv)
+
 process = Process()
-process.cmd = [binary]
+process.cmd = [binary, args.argv]
 system.cpu.workload = process
 system.cpu.createThreads()
 

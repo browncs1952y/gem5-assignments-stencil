@@ -49,12 +49,20 @@ class IntALU(FUDesc):
 
 class IntMultDiv(FUDesc):
     opList = [
-        OpDesc(opClass="IntMult", opLat=3, pipelined=False),
+        OpDesc(opClass="IntMult", opLat=3),
         OpDesc(opClass="IntDiv", opLat=20, pipelined=False),
     ]
 
     count = 2
 
+
+class IntMultDivUnit(FUDesc):
+    opList = [
+        OpDesc(opClass="IntMult", opLat=3),
+        OpDesc(opClass="IntDiv", opLat=250, pipelined=False),
+    ]
+
+    count = 2
 
 class FP_ALU(FUDesc):
     opList = [

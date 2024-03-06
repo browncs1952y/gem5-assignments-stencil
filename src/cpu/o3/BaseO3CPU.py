@@ -191,3 +191,6 @@ class BaseO3CPU(BaseCPU):
         TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
     )
     needsTSO = Param.Bool(False, "Enable TSO Memory model")
+
+class O3CPU1952y(BaseO3CPU):
+    fuPool = Param.FUPool(FUPool1952y(), "Functional Unit pool")

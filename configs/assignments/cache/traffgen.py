@@ -41,7 +41,7 @@ system.mem_ctrl.dram = DDR3_1600_8x8()
 system.mem_ranges = [AddrRange('512MB')]
 system.mem_ctrl.dram.range = system.mem_ranges[0]
 
-if (args.control):
+if (options.control):
     system.l2cache = L2Cache(options)
 else:
     system.l2cache = MicroL2Cache(options)

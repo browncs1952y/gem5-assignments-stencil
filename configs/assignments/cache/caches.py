@@ -39,6 +39,11 @@ from m5.objects import MicroCache
 m5.util.addToPath("../../")
 
 from common import SimpleOpts
+from m5.util.convert import toMemorySize
+
+SimpleOpts.add_option("--l2_size", help=f"L2 cache size. Default: 256kB")
+SimpleOpts.add_option("--l2_assoc", help=f"L2 cache assoc. Default: 1")
+SimpleOpts.add_option("--l2_latency", help=f"L2 cache latency. Default: 20")
 
 # Some specific options for caches
 # For all options see src/mem/cache/BaseCache.py
@@ -91,13 +96,13 @@ class MicroICache(MicroCache):
     """L1 instruction cache from Micro Cache"""
 
     # Set the default size
-    size = "16kB"
+    size = 16 * 1024 # "16kB"
 
     def __init__(self, opts=None):
         super().__init__()
         if not opts or not opts.l1i_size:
             return
-        self.size = opts.l1i_size
+        self.size = toMemorySize(opts.l1i_size)
 
     def connectBus(self, bus):
         """Connect this cache to a memory-side bus"""
@@ -132,13 +137,13 @@ class MicroDCache(MicroCache):
     """L1 data cache from Micro Cache"""
 
     # Set the default size
-    size = "64kB"
+    size = 64 * 1024 # 64kB
 
     def __init__(self, opts=None):
         super().__init__()
         if not opts or not opts.l1d_size:
             return
-        self.size = opts.l1d_size
+        self.size = toMemorySize(opts.l1d_size)
 
     def connectBus(self, bus):
         """Connect this cache to a memory-side bus"""
@@ -154,25 +159,21 @@ class L2Cache(Cache):
 
     # Default parameters
     size = "256kB"
-    assoc = 8
+    assoc = 1
     tag_latency = 20
     data_latency = 20
     response_latency = 20
     mshrs = 20
     tgts_per_mshr = 12
 
-    # SimpleOpts.add_option("--l2_size", help=f"L2 cache size. Default: {size}")
-    SimpleOpts.add_option("--l2_assoc", help=f"L2 cache assoc. Default: {assoc}")
-
     def __init__(self, opts=None):
         super().__init__()
-        if not opts or not opts.l2_size:
+        if not opts:
             return
-        self.size = opts.l2_size
-
-        if not opts or not opts.l2_assoc:
-            return
-        self.assoc = opts.l2_assoc
+        if opts.l2_size:
+            self.size = opts.l2_size
+        if opts.l2_assoc:
+            self.assoc = opts.l2_assoc
 
     def connectCPUSideBus(self, bus):
         self.cpu_side = bus.mem_side_ports
@@ -184,17 +185,20 @@ class MicroL2Cache(MicroCache):
     """L2 Cache from Micro Cache"""
 
     # Default parameters
-    size = "256kB"
-    assoc = 8
+    size = 256 * 1024 # "256kB"
+    assoc = 1
     latency = 20
-
-    SimpleOpts.add_option("--l2_size", help=f"L2 cache size. Default: {size}")
 
     def __init__(self, opts=None):
         super().__init__()
-        if not opts or not opts.l2_size:
-            return
-        self.size = opts.l2_size
+        if opts and opts.l2_size:
+            self.size = toMemorySize(opts.l2_size)
+
+        if opts and opts.l2_assoc:
+            self.assoc = opts.l2_assoc
+
+        if opts and opts.l2_latency:
+            self.latency = opts.l2_latency
 
     def connectCPUSideBus(self, bus):
         self.cpu_side = bus.mem_side_ports

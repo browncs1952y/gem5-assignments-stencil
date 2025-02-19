@@ -47,30 +47,33 @@ from m5.objects import *
 m5.util.addToPath("../")
 
 # import the caches which we made
-from caches import *
+from cache_configs import *
 
 # import the SimpleOpts module
 from common import SimpleOpts
 
 # Default to running 'hello', use the compiled ISA to find the binary
 # grab the specific path to the binary
-thispath = os.path.dirname(os.path.realpath(__file__))
-default_binary = os.path.join(
-    thispath,
-    "../../../",
-    "tests/test-progs/cache-tests/prog1",
-)
+default_binary = "tests/test-progs/cache-tests/prog1"
 
 maxtick=10000000000000
 SimpleOpts.add_option("--maxtick", default=maxtick, type=int)
 
-print(default_binary)
+print()
 
 # Binary to execute
-SimpleOpts.add_option("binary", nargs="?", default=default_binary)
+SimpleOpts.add_option("--binary", nargs="?", default=default_binary)
+SimpleOpts.add_option("--control", action="store_true")
 
 # Finalize the arguments and grab the args so we can pass it on to our objects
 args = SimpleOpts.parse_args()
+
+thispath = os.path.dirname(os.path.realpath(__file__))
+bin_path = os.path.join(
+    thispath,
+    "../../..",
+    args.binary
+)
 
 # create the system we are going to simulate
 system = System()
@@ -82,14 +85,13 @@ system.clk_domain.voltage_domain = VoltageDomain()
 
 # Set up the system
 system.mem_mode = "timing"  # Use timing accesses
-system.mem_ranges = [AddrRange("512MB")]  # Create an address range
 
 # Create a simple CPU
 system.cpu = RiscvTimingSimpleCPU()
 
 # Create an L1 instruction and data cache
-system.cpu.icache = L1ICache()
-system.cpu.dcache = L1DCache()
+system.cpu.icache = L1ICache(args)
+system.cpu.dcache = L1DCache(args)
 
 # Connect the instruction and data caches to the CPU
 system.cpu.icache.connectCPU(system.cpu)
@@ -103,7 +105,10 @@ system.cpu.icache.connectBus(system.l2bus)
 system.cpu.dcache.connectBus(system.l2bus)
 
 # Create an L2 cache and connect it to the l2bus
-system.l2cache = MicroL2Cache(args)
+if (args.control):
+    system.l2cache = L2Cache(args)
+else:
+    system.l2cache = MicroL2Cache(args)
 system.l2cache.connectCPUSideBus(system.l2bus)
 
 # Create a memory bus
@@ -124,16 +129,17 @@ system.system_port = system.membus.cpu_side_ports
 # Create a DDR3 memory controller
 system.mem_ctrl = MemCtrl()
 system.mem_ctrl.dram = DDR3_1600_8x8()
+system.mem_ranges = [AddrRange('512MB')]
 system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.mem_side_ports
 
-system.workload = SEWorkload.init_compatible(args.binary)
+system.workload = SEWorkload.init_compatible(bin_path)
 
 # Create a process for a simple "Hello World" application
 process = Process()
 # Set the command
 # cmd is a list which begins with the executable (like argv)
-process.cmd = [args.binary]
+process.cmd = [bin_path]
 # Set the cpu to use the process as its workload and create thread contexts
 system.cpu.workload = process
 system.cpu.createThreads()

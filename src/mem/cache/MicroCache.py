@@ -40,8 +40,9 @@ class MicroCache(SimObject):
 
     latency = Param.Int(2, "Cache access latency")
 
-    # UNUSED
-    size = Param.String("", "Unused param. Always size of 1")
+    size = Param.Int(64, "Cache size in bytes")
 
-    assoc = Param.Int(1, "Unused param. Always assoc of 1")
+    assoc = Param.Int(1, "Cache associativity")
+
+    # UNUSED
     prefetcher = Param.BasePrefetcher(NULL, "No prefetching")

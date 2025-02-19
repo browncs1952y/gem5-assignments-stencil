@@ -44,6 +44,7 @@ Source('write_queue.cc')
 Source('write_queue_entry.cc')
 
 Source('micro-cache.cc')
+DebugFlag('MicroCache')
 
 DebugFlag('Cache')
 DebugFlag('CacheComp')

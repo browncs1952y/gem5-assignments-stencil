@@ -1,4 +1,4 @@
-#include "util.h"
+#include <stdlib.h>
 
 int
 main(int argc, char **argv)
@@ -6,6 +6,8 @@ main(int argc, char **argv)
     char arr[256];
 
     for (int i = 0; i < 256; i++) {
-        arr[i] = (rand() % (1 << 8));
+        arr[i] = (char) (rand() % 256);
     }
+
+    return 0;
 }

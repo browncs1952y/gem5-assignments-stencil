@@ -10,6 +10,7 @@ from common import SimpleOpts
 SimpleOpts.add_option("--traffic_max_addr", default="512MB")
 SimpleOpts.add_option("--traffic_request_size", default=64, type=int)
 SimpleOpts.add_option("--traffic_num_reqs", default = 10000, type=int)
+SimpleOpts.add_option("--traffic_stride", default = 64, type=int)
 
 SimpleOpts.add_option("--control", action="store_true")
 
@@ -60,7 +61,7 @@ system.l2cache.connectMemSideBus(system.membus)
 system.mem_ctrl.port = system.membus.mem_side_ports
 
 def createRandomTraffic(tgen):
-    yield tgen.createRandom(1000000000,                    # duration
+    yield tgen.createRandom(10000000000,                    # duration
                             0,                                   # min_addr
                             AddrRange(options.traffic_max_addr).end, # max_adr
                             options.traffic_request_size,                                  # block_size
@@ -71,7 +72,7 @@ def createRandomTraffic(tgen):
     yield tgen.createExit(0)
 
 def createLinearTraffic(tgen):
-    yield tgen.createLinear(1000000000,                    # duration
+    yield tgen.createLinear(10000000000,                    # duration
                             0,                                   # min_addr
                             AddrRange(options.traffic_max_addr).end, # max_adr
                             options.traffic_request_size,                                  # block_size
@@ -82,18 +83,18 @@ def createLinearTraffic(tgen):
     yield tgen.createExit(0)
 
 
-# def createStridedTraffic(tgen):
-#     yield tgen.createStrided(1000000000,                    # duration
-#                             0,                                   # min_addr
-#                             AddrRange(options.traffic_max_addr).end, # max_adr
-#                             options.traffic_request_size,                                  # block_size
-#                             32, # stride
-#                             0, # gen_id
-#                             1000,                  # min_period
-#                             1000,                  # max_period
-#                             options.rd_prct,                     # rd_perc
-#                             options.traffic_num_reqs * options.traffic_request_size)                                   # data_limit
-#     yield tgen.createExit(0)
+def createStridedTraffic(tgen):
+    yield tgen.createStrided(10000000000,                    # duration
+                            0,                                   # min_addr
+                            AddrRange(options.traffic_max_addr).end, # max_adr
+                            64,                                  # block_size
+                            options.traffic_stride, # stride
+                            0, # gen_id
+                            1000,                  # min_period
+                            1000,                  # max_period
+                            options.rd_prct,                     # rd_perc
+                            options.traffic_num_reqs * options.traffic_request_size)                                   # data_limit
+    yield tgen.createExit(0)
 
 root = Root(full_system=False, system=system)
 
@@ -103,8 +104,8 @@ if options.traffic_mode == 'linear':
     system.generator.start(createLinearTraffic(system.generator))
 elif options.traffic_mode == 'random':
     system.generator.start(createRandomTraffic(system.generator))
-#elif options.traffic_mode == 'strided':
-#    system.generator.start(createStridedTraffic(system.generator))
+elif options.traffic_mode == 'strided':
+   system.generator.start(createStridedTraffic(system.generator))
 else:
     print('Wrong traffic type! Exiting!')
     exit()

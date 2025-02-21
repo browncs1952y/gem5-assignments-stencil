@@ -59,11 +59,9 @@ default_binary = "tests/test-progs/cache-tests/prog1"
 maxtick=10000000000000
 SimpleOpts.add_option("--maxtick", default=maxtick, type=int)
 
-print()
-
 # Binary to execute
-SimpleOpts.add_option("--binary", nargs="?", default=default_binary)
-SimpleOpts.add_option("--control", action="store_true")
+SimpleOpts.add_option("--binary", nargs="?", default=default_binary, help=f"Binary to run. Default: {default_binary}")
+SimpleOpts.add_option("--control", action="store_true", help="Revert to built-in gem5 l2 cache instead of using MicroCache")
 
 # Finalize the arguments and grab the args so we can pass it on to our objects
 args = SimpleOpts.parse_args()

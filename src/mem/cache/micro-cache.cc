@@ -27,114 +27,154 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/cache/micro-cache.hh"
-#include "params/MicroCache.hh"
+ #include "mem/cache/micro-cache.hh"
 
-namespace gem5 {
+ #include "params/MicroCache.hh"
+ 
+ namespace gem5 {
+ 
+ MicroCache::MicroCache(const MicroCacheParams *p) :
+     SimObject(*p),
+     cpu_side_port(p->name + ".cpu_side_port", this),
+     mem_side_port(p->name + ".mem_side_port", this),
+     memSendEvent([this] { sendToMem(); }, name()),
+     cpuSendEvent([this] { sendToCpu(); }, name()),
+     writebackEvent([this] { writebackToMem(); }, name()),
+     unblockEvent([this] { unblock(); }, name()),
+     toMem(nullptr),
+     toCPU(nullptr),
+     toWriteback(nullptr),
+     latency(p->latency * 1000),
+     assoc(p->assoc),
+     blocked(false),
+     writingback(false),
+     pending(nullptr),
+     stats(this)
+     // TODO: YOUR ADDITIONAL FIELDS HERE!
+ {
+     assert(p->size >= 64);
 
-MicroCache::MicroCache(const MicroCacheParams *p) :
-    SimObject(*p),
-    cpu_side_port(p->name + ".cpu_side_port", this),
-    mem_side_port(p->name + ".mem_side_port", this),
-    memSendEvent([this] { sendToMem(); }, name()),
-    cpuSendEvent([this] { sendToCpu(); }, name()),
-    writebackEvent([this] { writebackToMem(); }, name()),
-    // TODO: YOUR ADDITIONAL FIELDS HERE!
-    blocked(false),
-    to_mem(nullptr),
-    to_cpu(nullptr),
-    to_writeback(nullptr),
-    latency(p->latency * 1000),
-    stats(this)
-{
-};
+     // allocate one block;
+     blks = (Block *) malloc(sizeof(Block));
+     blks[0].valid = false;
+ 
+ };
+ 
+ /* Method required for Cache object to communicate */
+ Port&
+ MicroCache::getPort(const std::string &if_name, PortID idx)
+ {
+     if (if_name == "cpu_side") {
+         return cpu_side_port;
+     } else if (if_name == "mem_side") {
+         return mem_side_port;
+     }
+ 
+     return SimObject::getPort(if_name, idx);
+ }
+ 
+ /* Request from CPU side */
+ bool
+ MicroCache::handleRequest(PacketPtr pkt)
+ { 
+     if (blocked) {
+         return false;
+     }
+     blocked = true;
+ 
+ 
+     if (false) { // TODO: check if address is in cache
+         // hit case!
+         stats.hits++; // scaff
 
+         // todo: check information about pkt
+ 
+         if (pkt->needsResponse()) {
+            // todo: populate pkt with appropriate data
+             pkt->makeTimingResponse();
+             toCPU = pkt;
+ 
+             // schedule response event to be sent
+             schedule(cpuSendEvent, curTick() + latency);
+         } else {
+             schedule(unblockEvent, curTick() + latency);
+         }
+     } else if (false) { // TODO: check if address is not in cache
+         assert(pkt->isRead() || pkt->isWrite());
+         // miss case!
+         stats.misses++;
+ 
+         // TODO: send a request to memory using requestFromMem
+ 
+         pending = pkt; // make sure we track the request we sent
+     } else {
+         // Ignore non-read, non-write packets
+         blocked = false;
+     }
+ 
+     return true;
+ }
+ 
+ 
+ void
+ MicroCache::handleResponse(PacketPtr pkt)
+ {
+    assert(pending != nullptr);
+ 
+    Addr pendingAddr = pending->getAddr();
+ 
+     if (writingback) {
+        // this is an acknowledgement that writeback is complete!
+         writingback = false;
+         assert(pkt->isWrite() && pkt->isResponse());
+     } else {
+        // TODO: where does the data go?
 
-Port&
-MicroCache::getPort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "cpu_side") {
-        return cpu_side_port;
-    } else if (if_name == "mem_side") {
-        return mem_side_port;
-    }
+         if (false) { // TODO: do we need to evict a block?
+            // TODO: call writebackData
 
-    return SimObject::getPort(if_name, idx);
-}
+             writingback = true;
+         }
+ 
+         // TODO: fill block using data in plt
 
-
-bool
-MicroCache::handleRequest(PacketPtr pkt)
-{
-    if (blocked) {
-        return false;
-    }
-
-    blocked = true;
-
-    // TODO: Your implementation here!
-    if (false) {
-        // hit case!
-        stats.hits++;
-
-        // TODO!
-
-
-        if (pkt->needsResponse()) {
-            pkt->makeTimingResponse();
-            to_cpu = pkt;
-
-            schedule(cpuSendEvent, curTick() + latency);
-        }
-    } else {
-        // miss case!
-        stats.misses++;
-
-        pending = pkt;
-
-        // TODO!
-    }
-
-    return true;
-}
-
-
-void
-MicroCache::handleResponse(PacketPtr pkt)
-{
-    assert(blocked);
-
-    if (false /* some check if we need to writeback data */)
-        writebackData(false /* dirty? */, 0 /* tags info */, nullptr /* data */);
-
-    // this packet was dynamically created by us
-    delete pkt;
-
-    // TODO!
-
-    if (pending->needsResponse()) {
-        pending->makeTimingResponse();
-        to_cpu = pending;
-
-        schedule(cpuSendEvent, curTick() + latency);
-    }
-
-    pending = nullptr;
-}
-
-MicroCache::MicroCacheStats::MicroCacheStats(statistics::Group *parent)
-  : statistics::Group(parent),
-    ADD_STAT(hits, statistics::units::Count::get(), "Number of hits"),
-    ADD_STAT(misses, statistics::units::Count::get(), "Number of misses"),
-    ADD_STAT(hitRate, statistics::units::Ratio::get(), "Number of hits/ (hits + misses)", hits / (hits + misses))
-
-{
-}
-
-gem5::MicroCache*
-MicroCacheParams::create() const
-{
-    return new gem5::MicroCache(this);
-}
-
-}
+     }
+ 
+     // respond to CPU if necessary and unblock
+     if (!writingback) {
+         assert(blocked);
+         if (pending->needsResponse()) {
+            // make sure pending data is set here or above!
+             pending->makeTimingResponse();
+             toCPU = pending;
+             pending = nullptr;
+ 
+             // schedule response event to be sent
+             schedule(cpuSendEvent, curTick() + latency);
+         } else {
+             pending = nullptr;
+             schedule(unblockEvent, curTick() + latency);
+         }
+     }
+ 
+     // this packet was dynamically created by us
+     delete pkt; // scaff
+ }
+ 
+ MicroCache::MicroCacheStats::MicroCacheStats(statistics::Group *parent)
+   : statistics::Group(parent),
+     ADD_STAT(hits, statistics::units::Count::get(), "Number of hits"),
+     ADD_STAT(misses, statistics::units::Count::get(), "Number of misses"),
+     ADD_STAT(hitRate, statistics::units::Ratio::get(), "Number of hits/ (hits + misses)", hits / (hits + misses))
+ 
+ {
+ }
+ 
+ gem5::MicroCache*
+ MicroCacheParams::create() const
+ {
+     return new gem5::MicroCache(this);
+ }
+ 
+ }
+ 

@@ -61,7 +61,7 @@ system.l2cache.connectMemSideBus(system.membus)
 system.mem_ctrl.port = system.membus.mem_side_ports
 
 def createRandomTraffic(tgen):
-    yield tgen.createRandom(10000000000,                    # duration
+    yield tgen.createRandom(1000000000,                    # duration
                             0,                                   # min_addr
                             AddrRange(options.traffic_max_addr).end, # max_adr
                             options.traffic_request_size,                                  # block_size
@@ -72,7 +72,7 @@ def createRandomTraffic(tgen):
     yield tgen.createExit(0)
 
 def createLinearTraffic(tgen):
-    yield tgen.createLinear(10000000000,                    # duration
+    yield tgen.createLinear(1000000000,                    # duration
                             0,                                   # min_addr
                             AddrRange(options.traffic_max_addr).end, # max_adr
                             options.traffic_request_size,                                  # block_size
@@ -84,7 +84,7 @@ def createLinearTraffic(tgen):
 
 
 def createStridedTraffic(tgen):
-    yield tgen.createStrided(10000000000,                    # duration
+    yield tgen.createStrided(1000000000,                    # duration
                             0,                                   # min_addr
                             AddrRange(options.traffic_max_addr).end, # max_adr
                             64,                                  # block_size
@@ -93,7 +93,7 @@ def createStridedTraffic(tgen):
                             1000,                  # min_period
                             1000,                  # max_period
                             options.rd_prct,                     # rd_perc
-                            options.traffic_num_reqs * options.traffic_request_size)                                   # data_limit
+                            options.traffic_num_reqs * 64)                                   # data_limit
     yield tgen.createExit(0)
 
 root = Root(full_system=False, system=system)

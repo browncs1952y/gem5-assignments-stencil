@@ -555,6 +555,7 @@ for extra_dir in extras_dir_list:
 
 here = Dir('.').srcnode().abspath
 for root, dirs, files in os.walk(base_dir, topdown=True):
+    dirs.sort()
     if root == here:
         # we don't want to recurse back into this SConscript
         continue
@@ -572,6 +573,7 @@ for extra_dir in extras_dir_list:
     env.Append(CPPPATH=Dir(env['BUILDDIR']).Dir(extra_dir[prefix_len:]))
 
     for root, dirs, files in os.walk(extra_dir, topdown=True):
+        dirs.sort()
         # if build lives in the extras directory, don't walk down it
         if 'build' in dirs:
             dirs.remove('build')

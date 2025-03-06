@@ -68,6 +68,7 @@ def SystemCSource(*args):
 
 if arch:
     for root, dirs, files in os.walk(src_root):
+        dirs.sort()
         if 'SConscript.sc' in files:
             build_dir = os.path.relpath(root, src_root)
             systemc.SConscript(os.path.join(root, 'SConscript.sc'),

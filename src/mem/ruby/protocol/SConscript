@@ -48,6 +48,8 @@ from slicc.parser import SLICC
 
 slicc_depends = []
 for root,dirs,files in os.walk(slicc_dir.srcnode().abspath):
+    dirs.sort()
+    files.sort()
     for f in files:
         if f.endswith('.py'):
             slicc_depends.append(File(os.path.join(root, f)))

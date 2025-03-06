@@ -960,6 +960,8 @@ def FdtFsParse(path):
     nodes = {path: root}
 
     for subpath, subdirs, files in os.walk(path):
+        subdirs.sort()
+        files.sort()
         if subpath not in nodes.keys():
             raise Exception("os.walk error")
         cur = nodes[subpath]

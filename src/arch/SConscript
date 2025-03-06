@@ -110,6 +110,8 @@ SCons.Tool.SourceFileScanner.add_scanner('.cc.inc', SCons.Tool.CScanner)
 #
 parser_files = []
 for root, dirnames, filenames in os.walk(Dir("isa_parser").srcnode().abspath):
+    dirnames.sort()
+    filenames.sort()
     for name in filenames:
         _, ext = os.path.splitext(name)
         if ext == '.py':

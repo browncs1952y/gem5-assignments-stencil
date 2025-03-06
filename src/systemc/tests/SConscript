@@ -104,6 +104,8 @@ if env['CONF']['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
     def scan_dir_for_tests(subdir):
         subdir_src = Dir('.').srcdir.Dir(subdir)
         for root, dirs, files in os.walk(str(subdir_src)):
+            dirs.sort()
+            files.sort()
             # If there's a 'DONTRUN' file in this directory, skip it and any
             # child directories.
             if 'DONTRUN' in files:

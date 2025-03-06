@@ -106,7 +106,7 @@ def EnvDefaults(env):
     # with the param wrappes being compiled twice (see
     # https://github.com/SCons/scons/issues/2811
     env["IMPLICIT_COMMAND_DEPENDENCIES"] = 0
-    env.Decider("MD5-timestamp")
+    env.Decider("MD5")
 
     # add useful python code PYTHONPATH so it can be used by subprocesses
     # as well

@@ -63,7 +63,7 @@ system.mem_ctrl.port = system.membus.mem_side_ports
 def createRandomTraffic(tgen):
     yield tgen.createRandom(1000000000,                    # duration
                             0,                                   # min_addr
-                            AddrRange(options.traffic_max_addr).end, # max_adr
+                            AddrRange(options.traffic_max_addr).end - 64,  # max_adr
                             options.traffic_request_size,                                  # block_size
                             1000,                  # min_period
                             1000,                  # max_period
@@ -74,7 +74,7 @@ def createRandomTraffic(tgen):
 def createLinearTraffic(tgen):
     yield tgen.createLinear(1000000000,                    # duration
                             0,                                   # min_addr
-                            AddrRange(options.traffic_max_addr).end, # max_adr
+                            AddrRange(options.traffic_max_addr).end - 64, # max_adr
                             options.traffic_request_size,                                  # block_size
                             1000,                  # min_period
                             1000,                  # max_period
@@ -86,7 +86,7 @@ def createLinearTraffic(tgen):
 def createStridedTraffic(tgen):
     yield tgen.createStrided(1000000000,                    # duration
                             0,                                   # min_addr
-                            AddrRange(options.traffic_max_addr).end, # max_adr
+                            AddrRange(options.traffic_max_addr).end - 64, # max_adr
                             64,                                  # block_size
                             options.traffic_stride, # stride
                             0, # gen_id

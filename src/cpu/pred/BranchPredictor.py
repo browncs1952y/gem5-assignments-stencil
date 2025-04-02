@@ -190,7 +190,6 @@ class BiModeBP(BranchPredictor):
     choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 
-
 class TAGEBase(SimObject):
     type = "TAGEBase"
     cxx_class = "gem5::branch_prediction::TAGEBase"
@@ -1041,3 +1040,17 @@ class MultiperspectivePerceptronTAGE8KB(MultiperspectivePerceptronTAGE):
     tage = MPP_TAGE_8KB()
     loop_predictor = MPP_LoopPredictor_8KB()
     statistical_corrector = MPP_StatisticalCorrector_8KB()
+
+
+class HybridBP(BranchPredictor):
+    type = "HybridBP"
+    cxx_class = "gem5::branch_prediction::HybridBP"
+    cxx_header = "cpu/pred/hybrid.hh"
+
+    hybridPredictorEntries = Param.Unsigned(2048, "Size of hybrid predictor")
+    
+    localBP = Param.LocalBP(LocalBP(), "Local BP")
+    tournamentBP = Param.TournamentBP(TournamentBP(), "TournamentBP")
+    tageBP = Param.LTAGE(LTAGE(), "TAGE BP")
+    bimodeBP = Param.BiModeBP(BiModeBP(), "BiMode BP")
+    perceptronBP = Param.MultiperspectivePerceptron8KB(MultiperspectivePerceptron8KB(), "Perceptron BP")

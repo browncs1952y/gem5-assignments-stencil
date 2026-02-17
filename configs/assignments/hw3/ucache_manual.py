@@ -2,25 +2,26 @@ from m5.objects import *
 import m5
 from m5.objects.DRAMInterface import *
 from m5.objects.NVMInterface import *
-from cache_configs import *
+from ucache_configs import *
 
 from common import SimpleOpts
 
-# sample cmd: build/RISCV/gem5.debug --outdir=m5out1 configs/assignments/manual-req.py
+# sample cmd: /gem5_build/gem5.debug --outdir=m5out1 configs/assignments/ucache_manual.py
 
-SimpleOpts.add_option("--control", action="store_true")
+SimpleOpts.add_option("--control", action="store_true", help="Revert to built-in gem5 l2 cache instead of using MicroCache")
 
 # edit this to simulate next request!
 # tuples are: (start addr, size (in bytes), r/w (True if read, False if write))
 # address range (512 MB = 29 bits) = 0x00000000 - 0x1fffffff
-reqs = [(0x0, 64, True), (0x0, 64, True)]
+reqs = [(0x0, 64, True), (32, 32, True)]
 
-# 64 - (r_start % 64) > r_size
 for r_start, r_size, r_read in reqs:
-    print(r_start, r_size, r_read)
+    if r_size > 64:
+        print(f'Invalid request: (0x{r_start:x}, {r_size}, {r_read}). Size must not exceed block size (64). Exiting.')
+        exit(-1)
     if (64 - (r_start % 64) < r_size):
-        print(f'Invalid request: ({r_start}, {r_size}, {r_read}). Crosses block boundaries. Exiting.')
-        exit()
+        print(f'Invalid request: (0x{r_start:x}, {r_size}, {r_read}). Crosses block boundaries. Exiting.')
+        exit(-1)
 
 options = SimpleOpts.parse_args()
 
@@ -60,16 +61,19 @@ root = Root(full_system=False, system=system)
 
 m5.instantiate()
 
-# <duration (ticks)> <start addr> <end addr> <access size (bytes)>
-# <min period (ticks)> <max period (ticks)> <percent reads> <data limit (bytes)>
 DUR = 6000
 PER = int(DUR / 2)
 
 def trace():
     for r_start, r_size, r_read in reqs:
-        yield system.generator.createLinear(DUR, r_start, r_start - (r_start % 64) + 63, r_size, PER, PER, 100 if r_read else 0, 0)
+        # <duration (ticks)> <start addr> <end addr> <access size (bytes)>
+        # <min period (ticks)> <max period (ticks)> <percent reads> <data limit (bytes)>
+        yield system.generator.createLinear(DUR, r_start, r_start - (r_start % 64) + 63, r_size, 
+                                            PER, PER, 100 if r_read else 0, 0)
     yield system.generator.createExit(0)
 
 system.generator.start(trace())
 
+print(f"Beginning simulation!")
 exit_event = m5.simulate()
+print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}")

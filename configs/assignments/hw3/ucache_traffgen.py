@@ -2,31 +2,58 @@ from m5.objects import *
 import m5
 from m5.objects.DRAMInterface import *
 from m5.objects.NVMInterface import *
-from cache_configs import *
+from ucache_configs import *
 
 from common import SimpleOpts
 
-# sample cmd: build/RISCV/gem5.debug --outdir=m5out1 configs/assignments/traffgen.py linear 100 --traffic_request_size=32
-SimpleOpts.add_option("--traffic_max_addr", default="512MB")
-SimpleOpts.add_option("--traffic_request_size", default=64, type=int)
-SimpleOpts.add_option("--traffic_num_reqs", default = 10000, type=int)
-SimpleOpts.add_option("--traffic_stride", default = 64, type=int)
+# sample cmd: /gem5_build/gem5.debug --outdir=m5out1 configs/assignments/hw3/ucache_traffgen.py linear 100 --traffic_request_size=32
 
-SimpleOpts.add_option("--control", action="store_true")
+SimpleOpts.add_option("--traffic_max_addr", default="512MB", help="Maximum address for cache traffic generator (requests wrap back around to 0 in linear/strided mode). Defaut/maximum: 512MB")
+SimpleOpts.add_option("--traffic_request_size", default=64, type=int, help="Size of each request to cache in bytes. Default/maximum: 64. Ignored when mode is strided.")
+SimpleOpts.add_option("--traffic_num_reqs", default = 10000, type=int, help="Number of cache requests to generate. Default: 10000.")
+SimpleOpts.add_option("--traffic_stride", default = 64, type=int, help="Stride length in bytes. Default: 64. Must be multiple of 64. Ignored in all modes except strided.")
+
+SimpleOpts.add_option("--control", action="store_true", help="Revert to built-in gem5 l2 cache instead of using MicroCache")
 
 # required args
 SimpleOpts.add_option(
     "traffic_mode",
     type = str,
-    help = "pattern of generated addresses, linear or random."
+    help = 'Pattern of generated addresses:  \
+        linear (start at 0, subsequent addresses increased by request_size);  \
+        random (any size-aligned address between 0 and max_addr);  \
+        strided (start at 0, subsequent addresses increased by stride length)'
 )
 SimpleOpts.add_option(
     "rd_prct",
     type=int,
-    help="Read Percentage, the rest will be writes, ex: 70",
+    help="Approximate percentage of requests that are generated as reads. The rest will be writes. Ex: 70",
 )
 
 options = SimpleOpts.parse_args()
+
+if options.traffic_mode == "strided":
+    if options.traffic_request_size != 64:
+        print("WARNING: ignoring request size option for strided mode.")
+
+    if options.traffic_stride % 64 != 0:
+        print("Stride must be a multiple of 64. Exiting.")
+        exit(-1)
+else:
+    if options.traffic_stride != 64:
+        print("WARNING: ignoring stride option for " + options.traffic_mode + " mode.")
+
+    if options.traffic_request_size > 64:
+        print("Request size must not exceed 64. Exiting.")
+        exit(-1)
+
+    if 64 % options.traffic_request_size != 0:
+        print("Request size must evenly divide block size (64). Exiting.")
+        exit(-1)
+
+if int(AddrRange(options.traffic_max_addr).end) > 512 * 1024 * 1024:
+    print("Max addr must not exceed 512MB. Exiting.")
+    exit(-1)
 
 system = System()
 system.clk_domain = SrcClockDomain()
@@ -108,6 +135,8 @@ elif options.traffic_mode == 'strided':
    system.generator.start(createStridedTraffic(system.generator))
 else:
     print('Wrong traffic type! Exiting!')
-    exit()
+    exit(-1)
 
+print(f"Beginning simulation!")
 exit_event = m5.simulate()
+print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}")

@@ -34,10 +34,7 @@ line options from each individual class.
 import m5
 from m5.objects import Cache
 from m5.objects import MicroCache
-
-# Add the common scripts to our path
 m5.util.addToPath("../../")
-
 from common import SimpleOpts
 from m5.util.convert import toMemorySize
 
@@ -163,8 +160,8 @@ class L2Cache(Cache):
     tag_latency = 20
     data_latency = 20
     response_latency = 20
-    mshrs = 20
-    tgts_per_mshr = 12
+    mshrs = 1 # 20
+    tgts_per_mshr = 1 # 12
 
     def __init__(self, opts=None):
         super().__init__()

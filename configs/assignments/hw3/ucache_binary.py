@@ -24,36 +24,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" This file creates a single CPU and a two-level cache system.
-This script takes a single parameter which specifies a binary to execute.
-If none is provided it executes 'hello' by default (mostly used for testing)
 
-See Part 1, Chapter 3: Adding cache to the configuration script in the
-learning_gem5 book for more information about this script.
-This file exports options for the L1 I/D and L2 cache sizes.
-
-IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
-           also needs to be updated. For now, email Jason <power.jg@gmail.com>
-
-"""
-
-# import the m5 (gem5) library created when gem5 is built
 import m5
-
-# import all of the SimObjects
 from m5.objects import *
-
-# Add the common scripts to our path
 m5.util.addToPath("../")
-
-# import the caches which we made
-from cache_configs import *
-
-# import the SimpleOpts module
+from ucache_configs import *
 from common import SimpleOpts
 
-# Default to running 'hello', use the compiled ISA to find the binary
-# grab the specific path to the binary
+# sample cmd: /gem5_build/gem5.debug --outdir=m5out1 configs/assignments/ucache_binary.py tests/test-progs/hello/bin/riscv/hello
+
 default_binary = "tests/test-progs/cache-tests/prog1"
 
 maxtick=10000000000000

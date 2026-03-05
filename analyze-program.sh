@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# To access arg 1, use $1
-# echo $1
+if [ $# -ne 1 ] || [ ! -d $1 ]; then
+  echo "Usage: analyze-program.sh PATH-TO-DIR"
+  exit 1
+fi
 
-# TODO: your analysis here!
+for statf in $1/*.txt; do
+    echo $statf
+done
+

@@ -14,16 +14,13 @@ main(int argc, const char **argv)
     unsigned long long r2 = 846930886ULL;
 
     unsigned long long count = 0;
-    unsigned long long dummycount = 0;
     if (strcmp(argv[1], "supersecretdata") == 0) {
         for (int i = 0; i < 4096; i++) {
             count += r1 * r2;
-            dummycount += r1 / r2;
         }
     } else if (strcmp(argv[1], "notsosecretdata") == 0) {
         for (int i = 0; i < 4096; i++) {
             count += r1 / r2;
-            dummycount += r1 * r2;
         }
     } else {
         for (int i = 0; i < 4096; i++) {
